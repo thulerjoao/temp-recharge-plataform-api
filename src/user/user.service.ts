@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -18,7 +19,9 @@ export class UserService {
   };
 
   findAll() {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      select: this.userSelect,
+    });
   }
 
   async findOne(id: string): Promise<User> {
@@ -36,7 +39,11 @@ export class UserService {
     if (dto.confirmPassword !== dto.password) {
       throw new BadRequestException(`Passwords do not march`);
     }
-    const { confirmPassword, ...data } = dto;
+    const data = {
+      name: dto.name,
+      email: dto.email,
+      password: await bcrypt.hash(dto.password, 10),
+    };
     return await this.prisma.user.create({
       data,
       select: this.userSelect,
