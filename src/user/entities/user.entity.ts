@@ -3,6 +3,7 @@ export class User {
     name: string;
     email: string;
     password?: string;
+    verificationCode?: number;
     createdAt?: Date;
     updatedAt?: Date;
   }

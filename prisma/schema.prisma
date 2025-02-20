@@ -14,10 +14,11 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(uuid())
-  name     String
-  email    String @unique
-  password String
+  id               String @id @default(uuid())
+  name             String
+  email            String @unique
+  password         String
+  verificationCode Int?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -31,7 +32,6 @@ model Product {
   title       String  @unique
   description String
   price       Float
-
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

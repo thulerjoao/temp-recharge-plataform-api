@@ -1,9 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ResetPasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -63,5 +68,45 @@ export class UserService {
   async delete(id: string) {
     await this.findOne(id);
     await this.prisma.user.delete({ where: { id } });
+  }
+
+  async generateVerificationCode(email: string): Promise<number> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+    if (!user) {
+      throw new NotFoundException('Email não cadastrado');
+    }
+    const code = Math.floor(10000 + Math.random() * 90000);
+    await this.prisma.user.update({
+      where: { email },
+      data: { verificationCode: code },
+    });
+    return code;
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
+    const { email, code, password, confirmPassword } = dto;
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user || user.verificationCode !== code) {
+      throw new NotFoundException('Código inválido ou expirado');
+    }
+
+    if (password !== confirmPassword) {
+      throw new NotFoundException('As senhas não conicidem');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await this.prisma.user.update({
+      where: { email },
+      data: {
+        password: hashedPassword,
+        verificationCode: null,
+      },
+    });
+    return { message: 'Senha atualizada com sucesso' };
   }
 }

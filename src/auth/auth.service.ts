@@ -1,9 +1,13 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { LoginResponseDto } from './dto/login-response.dto';
-import { LoginDto } from './dto/login.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { LoginResponseDto } from './dto/login-response.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -31,19 +35,18 @@ export class AuthService {
       throw new UnauthorizedException('User or password invalid');
     }
     const isHashValid = await bcrypt.compare(password, user.password);
-    if(!isHashValid){
-        throw new UnauthorizedException('User or password invalid');
+    if (!isHashValid) {
+      throw new UnauthorizedException('User or password invalid');
     }
 
     const data = {
-        name: user.name,
-        email: user.email,
-    }
+      name: user.name,
+      email: user.email,
+    };
 
     return {
-        token: this.jwtService.sign({email}),
-        user: data
-    }
-
+      token: this.jwtService.sign({ email }),
+      user: data,
+    };
   }
 }
