@@ -40,6 +40,7 @@ export class AuthService {
     }
 
     const data = {
+      id: user.id,
       name: user.name,
       email: user.email,
     };
